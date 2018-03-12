@@ -23,7 +23,7 @@ function create_node_and_join_swarm {
 
     if [ $result -eq 0 ] ; then
         bash set-ufw-rules.sh $node_name
-        
+
         bash join-swarm.sh $node_name
     else
         echo "======> there was an error installing docker on $node_name"
@@ -90,6 +90,8 @@ else
     for i in {1..3}; do
         create_node_and_join_swarm broker-node-$i &
     done
+
+    wait
 fi
 
 echo "======> Finished creating cluster nodes."
