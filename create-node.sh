@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 node_type=$1
-node_name=node_type
+node_name=$node_type
 
 # ami="ami-4f80b52a"
 # ami="ami-6a5f6a0f"
