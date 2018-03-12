@@ -22,7 +22,7 @@ function create_node_and_join_swarm {
     result=$?
 
     if [ $result -eq 0 ] ; then
-        bash join-swarm $node_name
+        bash join-swarm.sh $node_name
     else
         echo "======> there was an error installing docker on $node_name"
     
