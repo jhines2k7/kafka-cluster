@@ -48,11 +48,3 @@ fi
 #check to make sure docker was properly installed on node
 echo "======> making sure docker is installed on $node_name"
 docker-machine ssh $node_name docker
-
-if [ $? -ne 0 ] ; then
-    echo "======> there was an error installing docker on $node_name"
-    
-    echo "$node_name" >> $failed_installs_file
-
-    return 1
-fi

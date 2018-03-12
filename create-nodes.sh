@@ -21,7 +21,12 @@ function create_node_and_join_swarm {
 
     if [ $result -eq 0 ] ; then
         bash join_swarm $node_name
+    else
+        echo "======> there was an error installing docker on $node_name"
+    
+        echo "$node_name" >> $failed_installs_file
     fi
+fi
 }
 
 if [ "$ENV" == "dev" ] ; then
