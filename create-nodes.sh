@@ -12,30 +12,16 @@ function init_swarm_manager {
     docker-machine ssh $manager_machine_name sudo docker swarm init --advertise-addr $ip
 }
 
-function get_ip {
-    echo $(docker-machine ip $1)
-}
-
-function get_worker_token {
-    # gets swarm manager token for a worker node
-    echo $(docker-machine ssh $manager_machine_name sudo docker swarm join-token worker -q)
-}
-
-function join_swarm {
-    local node_name=$1
-
-    docker-machine ssh $node_name \
-    sudo docker swarm join \
-        --token $(get_worker_token) \
-        $(get_ip $manager_machine_name):2377
-}
-
 function create_node_and_join_swarm {
     local node_name=$1
 
     bash create-node.sh $node_name
 
-    join_swarm $node_name
+    result=$?
+
+    if [ $result -eq 0 ] ; then
+        bash join_swarm $node_name
+    fi
 }
 
 if [ "$ENV" == "dev" ] ; then
@@ -96,3 +82,5 @@ echo "======> Finished creating cluster nodes."
 
 echo "======> Creating overlay network."
 docker-machine ssh $manager_machine_name docker network create -d overlay --attachable kafka-net
+
+bash ./remove-nodes-with-failed-docker-installations.sh

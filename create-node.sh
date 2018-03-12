@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+failed_installs_file="./failed_installs.txt"
+
 node_type=$1
 node_name=$node_type
 
@@ -37,4 +39,20 @@ else
     --digitalocean-size $size \
     --digitalocean-access-token $DIGITALOCEAN_ACCESS_TOKEN \
     $node_name
+fi
+
+if [ ! -e "$failed_installs_file" ] ; then
+    touch "$failed_installs_file"
+fi
+
+#check to make sure docker was properly installed on node
+echo "======> making sure docker is installed on $node_name"
+docker-machine ssh $node_name docker
+
+if [ $? -ne 0 ] ; then
+    echo "======> there was an error installing docker on $node_name"
+    
+    echo "$node_name" >> $failed_installs_file
+
+    return 1
 fi
