@@ -12,8 +12,8 @@ for i in {1..3}; do
     bash create-node.sh kafka-node-$i &
 done
 
-wait
-
 bash create-node.sh webtools &
+
+wait
 
 echo "======> Finished creating cluster nodes."
