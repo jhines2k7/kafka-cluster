@@ -16,7 +16,7 @@ docker service create \
 -e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka1:29092 \
 --constraint "engine.labels.node.type==$node_type_1" \
-confluentinc/cp-kafka:4.0.0
+confluentinc/cp-kafka:4.0.0 &
 
 docker service create \
 --network=kafka-net \
@@ -24,7 +24,7 @@ docker service create \
 -e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka2:39092 \
 --constraint "engine.labels.node.type==$node_type_2" \
-confluentinc/cp-kafka:4.0.0
+confluentinc/cp-kafka:4.0.0 &
 
 docker service create \
 --network=kafka-net \
@@ -32,4 +32,6 @@ docker service create \
 -e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka3:49092 \
 --constraint "engine.labels.node.type==$node_type_3" \
-confluentinc/cp-kafka:4.0.0
+confluentinc/cp-kafka:4.0.0 &
+
+wait

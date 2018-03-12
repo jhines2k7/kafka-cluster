@@ -20,7 +20,7 @@ docker service create \
 -e ZOOKEEPER_SYNC_LIMIT=2 \
 -e ZOOKEEPER_SERVERS="0.0.0.0:22888:23888;zk2:32888:33888;zk3:42888:43888" \
 --constraint "engine.labels.node.type==$node_type_1" \
-confluentinc/cp-zookeeper:4.0.0
+confluentinc/cp-zookeeper:4.0.0 &
 
 docker service create \
 --network kafka-net \
@@ -32,7 +32,7 @@ docker service create \
 -e ZOOKEEPER_SYNC_LIMIT=2 \
 -e ZOOKEEPER_SERVERS="zk1:22888:23888;0.0.0.0:32888:33888;zk3:42888:43888" \
 --constraint "engine.labels.node.type==$node_type_2" \
-confluentinc/cp-zookeeper:4.0.0
+confluentinc/cp-zookeeper:4.0.0 &
 
 docker service create \
 --network kafka-net \
@@ -44,4 +44,6 @@ docker service create \
 -e ZOOKEEPER_SYNC_LIMIT=2 \
 -e ZOOKEEPER_SERVERS="zk1:22888:23888;zk2:32888:33888;0.0.0.0:42888:43888" \
 --constraint "engine.labels.node.type==$node_type_3" \
-confluentinc/cp-zookeeper:4.0.0
+confluentinc/cp-zookeeper:4.0.0 &
+
+wait
