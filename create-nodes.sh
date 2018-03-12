@@ -39,6 +39,19 @@ function create_node_and_join_swarm {
 if [ "$ENV" == "dev" ] ; then
     bash create-node.sh kafka-node-1
 
+    result=$?
+
+    if [ $result -ne 0 ]
+    then
+        echo "There was an error installing docker on the manager node. The script will now exit."
+        
+        echo "=====> Cleaning up..."
+
+        bash ./remove-all-nodes.sh
+
+        exit 1   
+    fi
+
     init_swarm_manager
 
     for i in {2..3}; do
@@ -50,6 +63,21 @@ if [ "$ENV" == "dev" ] ; then
     wait
 else
     manager_machine_name=zk-node-1
+
+    bash create-node.sh zk-node-1
+
+    result=$?
+
+    if [ $result -ne 0 ]
+    then
+        echo "There was an error installing docker on the manager node. The script will now exit."
+        
+        echo "=====> Cleaning up..."
+
+        bash ./remove-all-nodes.sh
+
+        exit 1   
+    fi
 
     init_swarm_manager
 
