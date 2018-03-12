@@ -83,7 +83,7 @@ kafka-topics --describe --topic topic1 --zookeeper zk1:22181,zk2:32181,zk3:42181
 docker run \
 --net=kafka-net \
 --rm confluentinc/cp-kafka:4.0.0 \
-bash -c "seq 42 | kafka-console-producer --broker-list kafka1:29092 --topic topic1 && echo 'Produced 42 messages.'"
+bash -c "seq 42 | kafka-console-producer --broker-list kafka1:29092,kafka1:39092,kafka1:49092 --topic topic1 && echo 'Produced 42 messages.'"
 
 docker run \
 --net=kafka-net \
