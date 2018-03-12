@@ -3,7 +3,7 @@
 node_type=$1
 node_name=$node_type
 
-if [ $PROVDER == "aws" ] ; then
+if [ "$PROVIDER" == "aws" ] ; then
     instance_type=t2.large
     ami="ami-4f80b52a"
     # ami="ami-6a5f6a0f"
