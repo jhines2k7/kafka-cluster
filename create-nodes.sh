@@ -22,18 +22,20 @@ function get_worker_token {
 }
 
 function join_swarm {
-    local manager_machine=$(get_manager_machine_name)
-    
-    docker-machine ssh $1 \
+    local node_name=$1
+
+    docker-machine ssh $node_name \
     sudo docker swarm join \
         --token $(get_worker_token) \
         $(get_ip $manager_machine_name):2377
 }
 
 function create_node_and_join_swarm {
-    bash create-node.sh $1
+    local node_name=$1
 
-    join_swarm $1
+    bash create-node.sh $node_name
+
+    join_swarm $node_name
 }
 
 if [ "$ENV" == "dev" ] ; then
