@@ -15,4 +15,5 @@ done
 wait
 
 bash create-node.sh webtools &
+
 echo "======> Finished creating cluster nodes."
