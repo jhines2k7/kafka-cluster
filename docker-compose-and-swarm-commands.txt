@@ -38,7 +38,7 @@ docker run \
 --net=kafka-net \
 --rm \
 confluentinc/cp-kafka:4.0.0 \
-zookeeper-shell zk1:22181
+zookeeper-shell kafka-cluster_zk1:22181
 
 docker service create \
 --network=kafka-net \
