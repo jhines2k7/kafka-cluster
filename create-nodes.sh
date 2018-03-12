@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+failed_installs_file="./failed_installs.txt"
 manager_machine_name=kafka-node-1
 
 function init_swarm_manager {
@@ -26,8 +28,13 @@ function create_node_and_join_swarm {
     
         echo "$node_name" >> $failed_installs_file
     fi
-fi
 }
+
+if [ ! -e "$failed_installs_file" ] ; then
+    touch "$failed_installs_file"
+else
+    > $failed_installs_file
+fi
 
 if [ "$ENV" == "dev" ] ; then
     bash create-node.sh kafka-node-1
