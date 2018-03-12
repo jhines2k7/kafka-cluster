@@ -38,6 +38,8 @@ else
     > $failed_installs_file
 fi
 
+echo "ENV: $ENV"
+
 if [ "$ENV" == "dev" ] ; then
     bash create-node.sh kafka-node-1
 
