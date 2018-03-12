@@ -14,7 +14,6 @@ if [ "$PROVIDER" == "aws" ] ; then
 
     docker-machine create \
     --engine-label "node.type=$node_type" \
-    --engine-install-url=https://web.archive.org/web/20170623081500/https://get.docker.com \
     --driver amazonec2 \
     --amazonec2-ami $ami \
     --amazonec2-vpc-id vpc-663eb80e \
