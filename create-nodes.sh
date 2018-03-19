@@ -101,6 +101,6 @@ fi
 echo "======> Finished creating cluster nodes."
 
 echo "======> Creating overlay network."
-docker-machine ssh $manager_machine_name docker network create -d overlay --attachable kafka-net
+docker-machine ssh $manager_machine_name docker network create -d overlay --attachable kafkanet
 
 bash ./remove-nodes-with-failed-docker-installations.sh
