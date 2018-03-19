@@ -13,7 +13,7 @@ kafka-topics --describe --topic topic1 --zookeeper zk1:22181,zk2:32181,zk3:42181
 docker run \
 --net=kafkanet \
 --rm confluentinc/cp-kafka:4.0.0 \
-bash -c "seq 42 | kafka-console-producer --broker-list kafka1:29092,kafka1:39092,kafka1:49092 --topic topic1 && echo 'Produced 42 messages.'"
+bash -c "seq 42 | kafka-console-producer --broker-list kafka1:29092,kafka2:39092,kafka3:49092 --topic topic1 && echo 'Produced 42 messages.'"
 
 docker run \
 --net=kafkanet \
@@ -71,18 +71,19 @@ curl http://kafkarest:8082/topics
 docker service create \
 --name=controlcenter \
 --network=kafkanet \
---ulimit nofile=16384:16384 \
 -p 9021:9021 \
--v /tmp/control-center/data:/var/lib/confluent-control-center \
+--mount type=bind,source=/tmp/control-center/data,destination=/var/lib/confluent-control-center \
 -e CONTROL_CENTER_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e CONTROL_CENTER_BOOTSTRAP_SERVERS=kafka1:29092,kafka2:39092,kafka3:49092 \
 -e CONTROL_CENTER_REPLICATION_FACTOR=3 \
--e CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS=1 \
--e CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS=1 \
+-e CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS=3 \
+-e CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS=3 \
 -e CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS=2 \
 -e CONTROL_CENTER_CONNECT_CLUSTER=http://kafkaconnect:28082 \
 --constraint "engine.labels.node.type==confluence-platform" \
 confluentinc/cp-enterprise-control-center:4.0.0
+
+--mount type=bind,source=/tmp/control-center/data,destination=/var/lib/confluent-control-center \
 
 docker run \
 --net=kafkanet \
@@ -95,3 +96,62 @@ docker run \
 --rm \
 confluentinc/cp-kafka:4.0.0 \
 kafka-topics --create --topic quickstart-data --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+
+docker run \
+--net=kafkanet \
+--rm confluentinc/cp-kafka:4.0.0 \
+kafka-topics --create --topic c3-test --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+
+while true;
+do
+  docker run \
+    --net=kafkanet \
+    --rm \
+    -e CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-4.0.0.jar \
+    confluentinc/cp-kafka-connect:4.0.0 \
+    bash -c 'seq 10000 | kafka-console-producer --request-required-acks 1 --broker-list kafka1:29092,kafka2:39092,kafka3:49092 --topic c3-test --producer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor --producer-property acks=1 && echo "Produced 10000 messages."'
+    sleep 10;
+done
+
+OFFSET=0
+
+while true;
+do
+  docker run \
+    --net=kafkanet \
+    --rm \
+    -e CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-4.0.0.jar \
+    confluentinc/cp-kafka-connect:4.0.0 \
+    bash -c 'kafka-console-consumer --consumer-property group.id=qs-consumer --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --bootstrap-server kafka1:29092,kafka2:39092,kafka3:49092 --topic c3-test --offset '$OFFSET' --partition 0 --max-messages=1000'
+  sleep 1;
+  let OFFSET=OFFSET+1000
+done
+
+docker service create \
+--name=kafkaconnect \
+--net=kafkanet \
+-e CONNECT_PRODUCER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor \
+-e CONNECT_CONSUMER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor \
+-e CONNECT_BOOTSTRAP_SERVERS=kafka1:29092,kafka2:39092,kafka3:49092 \
+-e CONNECT_REST_PORT=28082 \
+-e CONNECT_GROUP_ID="quickstart" \
+-e CONNECT_CONFIG_STORAGE_TOPIC="quickstart-config" \
+-e CONNECT_OFFSET_STORAGE_TOPIC="quickstart-offsets" \
+-e CONNECT_STATUS_STORAGE_TOPIC="quickstart-status" \
+-e CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=3 \
+-e CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=3 \
+-e CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=3 \
+-e CONNECT_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+-e CONNECT_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+-e CONNECT_INTERNAL_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+-e CONNECT_INTERNAL_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+-e CONNECT_REST_ADVERTISED_HOST_NAME="kafkaconnect" \
+-e CONNECT_LOG4J_ROOT_LOGLEVEL=DEBUG \
+-e CONNECT_LOG4J_LOGGERS=org.reflections=ERROR \
+-e CONNECT_PLUGIN_PATH=/usr/share/java \
+-e CONNECT_REST_HOST_NAME="kafkaconnect" \
+--mount type=bind,source=/tmp/quickstart/file,destination=/tmp/quickstart \
+--constraint "engine.labels.node.type==confluence-platform" \
+confluentinc/cp-kafka-connect:4.0.0
+
+--mount type=bind,source=/tmp/control-center/data,destination=/var/lib/confluent-control-center \
