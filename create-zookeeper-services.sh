@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+if [ "$ENV" == "dev" ] ; then
+    eval $(docker-machine env kafka-node-1)
+else
+    eval $(docker-machine env zk-node-1)
+fi
+
 node_type_1=zk-node-1
 node_type_2=zk-node-2
 node_type_3=zk-node-3
