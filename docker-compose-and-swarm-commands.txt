@@ -89,6 +89,12 @@ docker run \
 --net=kafkanet \
 --rm \
 confluentinc/cp-kafka:4.0.0 \
+kafka-topics --create --topic quickstart-config --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+
+docker run \
+--net=kafkanet \
+--rm \
+confluentinc/cp-kafka:4.0.0 \
 kafka-topics --create --topic quickstart-offsets --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
 
 docker run \
@@ -129,7 +135,7 @@ done
 
 docker service create \
 --name=kafkaconnect \
---net=kafkanet \
+--network=kafkanet \
 -e CONNECT_PRODUCER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor \
 -e CONNECT_CONSUMER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor \
 -e CONNECT_BOOTSTRAP_SERVERS=kafka1:29092,kafka2:39092,kafka3:49092 \
