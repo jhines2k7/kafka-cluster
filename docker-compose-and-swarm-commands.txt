@@ -48,6 +48,15 @@ docker service create \
 --constraint "engine.labels.node.type==confluence-platform" \
 confluentinc/cp-kafka-rest:4.0.0
 
+docker service create \
+--name kafkatopicsui \
+--network kafkanet \
+-p 8000:8000 \
+-e KAFKA_REST_PROXY_URL=http://kafkarest:8082 \
+-e PROXY=true \
+--constraint "engine.labels.node.type==confluence-platform" \
+landoop/kafka-topics-ui
+
 docker run -it --net=kafkanet --rm confluentinc/cp-schema-registry:4.0.0 bash
 
 curl -X POST -H "Content-Type: application/vnd.kafka.v1+json" \
@@ -61,7 +70,7 @@ curl http://kafkarest:8082/topics
 
 docker service create \
 --name=controlcenter \
---net=kafkanet \
+--network=kafkanet \
 --ulimit nofile=16384:16384 \
 -p 9021:9021 \
 -v /tmp/control-center/data:/var/lib/confluent-control-center \
@@ -72,19 +81,8 @@ docker service create \
 -e CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS=1 \
 -e CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS=2 \
 -e CONTROL_CENTER_CONNECT_CLUSTER=http://kafkaconnect:28082 \
+--constraint "engine.labels.node.type==confluence-platform" \
 confluentinc/cp-enterprise-control-center:4.0.0
-
-docker run --rm -it --net=kafkanet -p 8000:8000 \
--e "KAFKA_REST_PROXY_URL=http://kafkarest:8082" \
--e "PROXY=true" \
-landoop/kafka-topics-ui
-
-docker service create \ 
--network=kafkanet \ 
--p 8000:8000 \
--e "KAFKA_REST_PROXY_URL=http://kafkarest:8082" \
--e "PROXY=true" \
-landoop/kafka-topics-ui
 
 docker run \
 --net=kafkanet \
