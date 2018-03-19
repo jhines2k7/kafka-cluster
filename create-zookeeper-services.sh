@@ -11,7 +11,7 @@ if [ "$ENV" == "dev" ] ; then
 fi
 
 docker service create \
---network kafka-net \
+--network kafkanet \
 --name zk1 \
 -e ZOOKEEPER_SERVER_ID=1 \
 -e ZOOKEEPER_CLIENT_PORT=22181 \
@@ -23,7 +23,7 @@ docker service create \
 confluentinc/cp-zookeeper:4.0.0 &
 
 docker service create \
---network kafka-net \
+--network kafkanet \
 --name zk2 \
 -e ZOOKEEPER_SERVER_ID=2 \
 -e ZOOKEEPER_CLIENT_PORT=32181 \
@@ -35,7 +35,7 @@ docker service create \
 confluentinc/cp-zookeeper:4.0.0 &
 
 docker service create \
---network kafka-net \
+--network kafkanet \
 --name zk3 \
 -e ZOOKEEPER_SERVER_ID=3 \
 -e ZOOKEEPER_CLIENT_PORT=42181 \

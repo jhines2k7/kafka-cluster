@@ -11,7 +11,7 @@ if [ "$ENV" == "dev" ] ; then
 fi
 
 docker service create \
---network=kafka-net \
+--network=kafkanet \
 --name=kafka1 \
 -e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka1:29092 \
@@ -19,7 +19,7 @@ docker service create \
 confluentinc/cp-kafka:4.0.0 &
 
 docker service create \
---network=kafka-net \
+--network=kafkanet \
 --name=kafka2 \
 -e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka2:39092 \
@@ -27,7 +27,7 @@ docker service create \
 confluentinc/cp-kafka:4.0.0 &
 
 docker service create \
---network=kafka-net \
+--network=kafkanet \
 --name=kafka3 \
 -e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka3:49092 \
