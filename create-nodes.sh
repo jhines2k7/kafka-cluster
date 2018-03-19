@@ -62,7 +62,7 @@ if [ "$ENV" == "dev" ] ; then
         create_node_and_join_swarm kafka-node-$i &
     done
 
-    create_node_and_join_swarm webtools &
+    create_node_and_join_swarm confluence-platform &
 
     wait
 else
@@ -92,6 +92,8 @@ else
     for i in {1..3}; do
         create_node_and_join_swarm broker-node-$i &
     done
+
+    create_node_and_join_swarm confluence-platform &
 
     wait
 fi
