@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
+node_name=zk-node-1
+
 if [ "$ENV" == "dev" ] ; then
-    eval $(docker-machine env kafka-node-1)
-else
-    eval $(docker-machine env zk-node-1)
+    node_name=kafka-node-1
 fi
 
 node_type_1=zk-node-1
@@ -15,6 +15,8 @@ if [ "$ENV" == "dev" ] ; then
     node_type_2=kafka-node-2
     node_type_3=kafka-node-3
 fi
+
+eval "$(docker-machine env $node_name)"
 
 docker service create \
 --network kafkanet \
