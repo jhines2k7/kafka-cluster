@@ -8,7 +8,7 @@ if [ "$PROVIDER" == "aws" ] ; then
     ami="ami-4f80b52a"
     # ami="ami-6a5f6a0f"
 
-    if [ "$node_type" == "confluence-platform" ] ; then
+    if [ "$node_type" == "confluent" || "$node_type" == "landoop" ] ; then
         instance_type=t2.small
     fi
 
@@ -26,7 +26,7 @@ if [ "$PROVIDER" == "aws" ] ; then
 else
     size=4gb
 
-    if [ "$node_type" == "confluence-platform" ] ; then
+    if [ "$node_type" == "confluent" || "$node_type" == "landoop" ] ; then
         size=2gb
     fi
 

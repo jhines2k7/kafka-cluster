@@ -60,11 +60,7 @@ if [ "$ENV" == "dev" ] ; then
 
     for i in {2..3}; do
         create_node_and_join_swarm kafka-node-$i &
-    done
-
-    create_node_and_join_swarm confluence-platform &
-
-    wait
+    done    
 else
     manager_machine_name=zk-node-1
 
@@ -92,11 +88,13 @@ else
     for i in {1..3}; do
         create_node_and_join_swarm broker-node-$i &
     done
-
-    create_node_and_join_swarm confluence-platform &
-
-    wait
 fi
+
+create_node_and_join_swarm confluent &
+
+create_node_and_join_swarm landoop &
+
+wait
 
 echo "======> Finished creating cluster nodes."
 
