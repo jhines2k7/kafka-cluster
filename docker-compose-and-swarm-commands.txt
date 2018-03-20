@@ -101,6 +101,16 @@ docker service create \
 --constraint "engine.labels.node.type==webtools" \
 confluentinc/cp-schema-registry:4.0.0
 
+docker run -it --net=kafka-net --rm confluentinc/cp-schema-registry:4.0.0 bash
+
+/usr/bin/kafka-avro-console-producer --broker-list kafka1:29092 --topic topic1 --property schema.registry.url=http://schema-registry:8081 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+
+{"f1": "value1"}
+
+curl -X POST -H "Content-Type: application/vnd.kafka.v1+json" \
+--data '{"name": "my_consumer_instance", "format": "avro", "auto.offset.reset": "smallest"}' \
+http://kafka-rest:8082/consumers/my_avro_consumer
+
 docker service create \
 --network=kafka-net \
 --name=kafka-rest \
@@ -110,17 +120,3 @@ docker service create \
 -e KAFKA_REST_HOST_NAME=kafka-rest \
 --constraint "engine.labels.node.type==webtools" \
 confluentinc/cp-kafka-rest:4.0.0
-
-docker run -it --net=kafka-net --rm confluentinc/cp-schema-registry:4.0.0 bash
-
-/usr/bin/kafka-avro-console-producer --broker-list kafka1:29092 --topic topic1 --property schema.registry.url=http://schema-registry:8081 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
-
-{"f1": "value1"}
-
-docker exec -it 80caca0a5fab bash
-
-curl -X POST -H "Content-Type: application/vnd.kafka.v1+json" \
---data '{"name": "my_consumer_instance", "format": "avro", "auto.offset.reset": "smallest"}' \
-http://kafka-rest:8082/consumers/my_avro_consumer
-
-docker service create --name=nginx --network=kafka-net -p 80:80 --constraint "engine.labels.node.type==webtools" nginx
