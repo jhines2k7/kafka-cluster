@@ -6,8 +6,8 @@ docker service create \
 --name kafkatopicsui \
 --network kafkanet \
 -p 8000:8000 \
--e KAFKA_REST_PROXY_URL=http://kafkarest:8082 \
--e PROXY=true \
+-e KAFKA_REST_PROXY_URL http://kafkarest:8082 \
+-e PROXY true \
 --constraint "engine.labels.node.type==landoop" \
 landoop/kafka-topics-ui &
 
