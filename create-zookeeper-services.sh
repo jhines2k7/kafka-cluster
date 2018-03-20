@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+node_name=zk-node-1
+
+if [ "$ENV" == "dev" ] ; then
+    node_name=kafka-node-1
+fi
+
 node_type_1=zk-node-1
 node_type_2=zk-node-2
 node_type_3=zk-node-3
@@ -10,8 +16,10 @@ if [ "$ENV" == "dev" ] ; then
     node_type_3=kafka-node-3
 fi
 
+eval "$(docker-machine env $node_name)"
+
 docker service create \
---network kafka-net \
+--network kafkanet \
 --name zk1 \
 -e ZOOKEEPER_SERVER_ID=1 \
 -e ZOOKEEPER_CLIENT_PORT=22181 \
@@ -23,7 +31,7 @@ docker service create \
 confluentinc/cp-zookeeper:4.0.0 &
 
 docker service create \
---network kafka-net \
+--network kafkanet \
 --name zk2 \
 -e ZOOKEEPER_SERVER_ID=2 \
 -e ZOOKEEPER_CLIENT_PORT=32181 \
@@ -35,7 +43,7 @@ docker service create \
 confluentinc/cp-zookeeper:4.0.0 &
 
 docker service create \
---network kafka-net \
+--network kafkanet \
 --name zk3 \
 -e ZOOKEEPER_SERVER_ID=3 \
 -e ZOOKEEPER_CLIENT_PORT=42181 \

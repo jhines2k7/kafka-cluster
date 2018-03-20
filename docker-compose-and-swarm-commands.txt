@@ -1,122 +1,163 @@
-docker service create \
---network kafka-net \
---name zk1 \
--e ZOOKEEPER_SERVER_ID=1 \
--e ZOOKEEPER_CLIENT_PORT=22181 \
--e ZOOKEEPER_TICK_TIME=2000 \
--e ZOOKEEPER_INIT_LIMIT=5 \
--e ZOOKEEPER_SYNC_LIMIT=2 \
--e ZOOKEEPER_SERVERS="0.0.0.0:22888:23888;zk2:32888:33888;zk3:42888:43888" \
---constraint "engine.labels.node.type==zk-node-1" \
-confluentinc/cp-zookeeper:4.0.0
-
-docker service create \
---network kafka-net \
---name zk2 \
--e ZOOKEEPER_SERVER_ID=2 \
--e ZOOKEEPER_CLIENT_PORT=32181 \
--e ZOOKEEPER_TICK_TIME=2000 \
--e ZOOKEEPER_INIT_LIMIT=5 \
--e ZOOKEEPER_SYNC_LIMIT=2 \
--e ZOOKEEPER_SERVERS="zk1:22888:23888;0.0.0.0:32888:33888;zk3:42888:43888" \
---constraint "engine.labels.node.type==zk-node-2" \
-confluentinc/cp-zookeeper:4.0.0
-
-docker service create \
---network kafka-net \
---name zk3 \
--e ZOOKEEPER_SERVER_ID=3 \
--e ZOOKEEPER_CLIENT_PORT=42181 \
--e ZOOKEEPER_TICK_TIME=2000 \
--e ZOOKEEPER_INIT_LIMIT=5 \
--e ZOOKEEPER_SYNC_LIMIT=2 \
--e ZOOKEEPER_SERVERS="zk1:22888:23888;zk2:32888:33888;0.0.0.0:42888:43888" \
---constraint "engine.labels.node.type==zk-node-3" \
-confluentinc/cp-zookeeper:4.0.0
-
 docker run \
---net=kafka-net \
---rm \
-confluentinc/cp-kafka:4.0.0 \
-zookeeper-shell zk1:22181
-
-docker service create \
---network=kafka-net \
---name=kafka1 \
--e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
--e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka1:29092 \
---constraint "engine.labels.node.type==broker-node-1" \
-confluentinc/cp-kafka:4.0.0
-
-docker service create \
---network=kafka-net \
---name=kafka2 \
--e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
--e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka2:39092 \
---constraint "engine.labels.node.type==broker-node-2" \
-confluentinc/cp-kafka:4.0.0
-
-docker service create \
---network=kafka-net \
---name=kafka3 \
--e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
--e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka3:49092 \
---constraint "engine.labels.node.type==broker-node-3" \
-confluentinc/cp-kafka:4.0.0
-
-docker logs kafka1
-docker logs kafka2
-docker logs kafka3
-
-docker run \
---net=kafka-net \
+--net=kafkanet \
 --rm \
 confluentinc/cp-kafka:4.0.0 \
 kafka-topics --create --topic topic1 --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
 
 docker run \
---net=kafka-net \
+--net=kafkanet \
 --rm \
 confluentinc/cp-kafka:4.0.0 \
 kafka-topics --describe --topic topic1 --zookeeper zk1:22181,zk2:32181,zk3:42181
 
 docker run \
---net=kafka-net \
+--net=kafkanet \
 --rm confluentinc/cp-kafka:4.0.0 \
-bash -c "seq 42 | kafka-console-producer --broker-list kafka1:29092,kafka1:39092,kafka1:49092 --topic topic1 && echo 'Produced 42 messages.'"
+bash -c "seq 42 | kafka-console-producer --broker-list kafka1:29092,kafka2:39092,kafka3:49092 --topic topic1 && echo 'Produced 42 messages.'"
 
 docker run \
---net=kafka-net \
+--net=kafkanet \
 --rm \
 confluentinc/cp-kafka:4.0.0 \
 kafka-console-consumer --bootstrap-server kafka1:29092 --topic topic1 --new-consumer --from-beginning --max-messages 42
 
 docker service create \
---network=kafka-net \
---name=schema-registry \
--p 8081:8081 \
+--network=kafkanet \
+--name=schemaregistry \
 -e SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zk1:22181 \
--e SCHEMA_REGISTRY_HOST_NAME=schema-registry \
--e SCHEMA_REGISTRY_LISTENERS=http://schema-registry:8081 \
---constraint "engine.labels.node.type==webtools" \
+-e SCHEMA_REGISTRY_HOST_NAME=schemaregistry \
+-e SCHEMA_REGISTRY_LISTENERS=http://0.0.0.0:8081 \
+--constraint "engine.labels.node.type==confluence-platform" \
 confluentinc/cp-schema-registry:4.0.0
 
 docker run -it --net=kafka-net --rm confluentinc/cp-schema-registry:4.0.0 bash
 
-/usr/bin/kafka-avro-console-producer --broker-list kafka1:29092 --topic topic1 --property schema.registry.url=http://schema-registry:8081 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+/usr/bin/kafka-avro-console-producer --broker-list kafka1:29092,kafka2:39092,kafka3:39092 --topic schemademo --property schema.registry.url=http://schemaregistry:8081 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 {"f1": "value1"}
+{"f1": "value2"}
+{"f1": "value3"}
+
+docker service create \
+--network=kafkanet \
+--name=kafkarest \
+-e KAFKA_REST_ZOOKEEPER_CONNECT=zk1:22181 \
+-e KAFKA_REST_LISTENERS=http://0.0.0.0:8082 \
+-e KAFKA_REST_SCHEMA_REGISTRY_URL=http://schemaregistry:8081 \
+-e KAFKA_REST_HOST_NAME=kafkarest \
+--constraint "engine.labels.node.type==confluence-platform" \
+confluentinc/cp-kafka-rest:4.0.0
+
+docker service create \
+--name kafkatopicsui \
+--network kafkanet \
+-p 8000:8000 \
+-e KAFKA_REST_PROXY_URL=http://kafkarest:8082 \
+-e PROXY=true \
+--constraint "engine.labels.node.type==confluence-platform" \
+landoop/kafka-topics-ui
+
+docker run -it --net=kafkanet --rm confluentinc/cp-schema-registry:4.0.0 bash
 
 curl -X POST -H "Content-Type: application/vnd.kafka.v1+json" \
 --data '{"name": "my_consumer_instance", "format": "avro", "auto.offset.reset": "smallest"}' \
-http://kafka-rest:8082/consumers/my_avro_consumer
+http://kafkarest:8082/consumers/my_avro_consumer
+
+curl -X GET -H "Accept: application/vnd.kafka.avro.v1+json" \
+http://kafkarest:8082/consumers/my_avro_consumer/instances/my_consumer_instance/topics/schemademo
+
+curl http://kafkarest:8082/topics
 
 docker service create \
---network=kafka-net \
---name=kafka-rest \
--e KAFKA_REST_ZOOKEEPER_CONNECT=zk1:22181 \
--e KAFKA_REST_LISTENERS=http://0.0.0.0:8082 \
--e KAFKA_REST_SCHEMA_REGISTRY_URL=http://localhost:8081 \
--e KAFKA_REST_HOST_NAME=kafka-rest \
---constraint "engine.labels.node.type==webtools" \
-confluentinc/cp-kafka-rest:4.0.0
+--name=controlcenter \
+--network=kafkanet \
+-p 9021:9021 \
+--mount type=bind,source=/tmp/control-center/data,destination=/var/lib/confluent-control-center \
+-e CONTROL_CENTER_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
+-e CONTROL_CENTER_BOOTSTRAP_SERVERS=kafka1:29092,kafka2:39092,kafka3:49092 \
+-e CONTROL_CENTER_REPLICATION_FACTOR=3 \
+-e CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS=3 \
+-e CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS=3 \
+-e CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS=2 \
+-e CONTROL_CENTER_CONNECT_CLUSTER=http://kafkaconnect:28082 \
+--constraint "engine.labels.node.type==confluence-platform" \
+confluentinc/cp-enterprise-control-center:4.0.0
+
+--mount type=bind,source=/tmp/control-center/data,destination=/var/lib/confluent-control-center \
+
+docker run \
+--net=kafkanet \
+--rm \
+confluentinc/cp-kafka:4.0.0 \
+kafka-topics --create --topic quickstart-config --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+
+docker run \
+--net=kafkanet \
+--rm \
+confluentinc/cp-kafka:4.0.0 \
+kafka-topics --create --topic quickstart-offsets --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+
+docker run \
+--net=kafkanet \
+--rm \
+confluentinc/cp-kafka:4.0.0 \
+kafka-topics --create --topic quickstart-data --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+
+docker run \
+--net=kafkanet \
+--rm confluentinc/cp-kafka:4.0.0 \
+kafka-topics --create --topic c3-test --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+
+while true;
+do
+  docker run \
+    --net=kafkanet \
+    --rm \
+    -e CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-4.0.0.jar \
+    confluentinc/cp-kafka-connect:4.0.0 \
+    bash -c 'seq 10000 | kafka-console-producer --request-required-acks 1 --broker-list kafka1:29092,kafka2:39092,kafka3:49092 --topic c3-test --producer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor --producer-property acks=1 && echo "Produced 10000 messages."'
+    sleep 10;
+done
+
+OFFSET=0
+
+while true;
+do
+  docker run \
+    --net=kafkanet \
+    --rm \
+    -e CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-4.0.0.jar \
+    confluentinc/cp-kafka-connect:4.0.0 \
+    bash -c 'kafka-console-consumer --consumer-property group.id=qs-consumer --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --bootstrap-server kafka1:29092,kafka2:39092,kafka3:49092 --topic c3-test --offset '$OFFSET' --partition 0 --max-messages=1000'
+  sleep 1;
+  let OFFSET=OFFSET+1000
+done
+
+docker service create \
+--name=kafkaconnect \
+--network=kafkanet \
+-e CONNECT_PRODUCER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor \
+-e CONNECT_CONSUMER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor \
+-e CONNECT_BOOTSTRAP_SERVERS=kafka1:29092,kafka2:39092,kafka3:49092 \
+-e CONNECT_REST_PORT=28082 \
+-e CONNECT_GROUP_ID="quickstart" \
+-e CONNECT_CONFIG_STORAGE_TOPIC="quickstart-config" \
+-e CONNECT_OFFSET_STORAGE_TOPIC="quickstart-offsets" \
+-e CONNECT_STATUS_STORAGE_TOPIC="quickstart-status" \
+-e CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=3 \
+-e CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=3 \
+-e CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=3 \
+-e CONNECT_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+-e CONNECT_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+-e CONNECT_INTERNAL_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+-e CONNECT_INTERNAL_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
+-e CONNECT_REST_ADVERTISED_HOST_NAME="kafkaconnect" \
+-e CONNECT_LOG4J_ROOT_LOGLEVEL=DEBUG \
+-e CONNECT_LOG4J_LOGGERS=org.reflections=ERROR \
+-e CONNECT_PLUGIN_PATH=/usr/share/java \
+-e CONNECT_REST_HOST_NAME="kafkaconnect" \
+--mount type=bind,source=/tmp/quickstart/file,destination=/tmp/quickstart \
+--constraint "engine.labels.node.type==confluence-platform" \
+confluentinc/cp-kafka-connect:4.0.0
+
+--mount type=bind,source=/tmp/control-center/data,destination=/var/lib/confluent-control-center \

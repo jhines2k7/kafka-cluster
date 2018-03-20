@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+node_name=zk-node-1
+
+if [ "$ENV" == "dev" ] ; then
+    node_name=kafka-node-1
+fi
+
 node_type_1=broker-node-1
 node_type_2=broker-node-2
 node_type_3=broker-node-3
@@ -10,8 +16,10 @@ if [ "$ENV" == "dev" ] ; then
     node_type_3=kafka-node-3
 fi
 
+eval "$(docker-machine env $node_name)"
+
 docker service create \
---network=kafka-net \
+--network=kafkanet \
 --name=kafka1 \
 -e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka1:29092 \
@@ -19,7 +27,7 @@ docker service create \
 confluentinc/cp-kafka:4.0.0 &
 
 docker service create \
---network=kafka-net \
+--network=kafkanet \
 --name=kafka2 \
 -e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka2:39092 \
@@ -27,7 +35,7 @@ docker service create \
 confluentinc/cp-kafka:4.0.0 &
 
 docker service create \
---network=kafka-net \
+--network=kafkanet \
 --name=kafka3 \
 -e KAFKA_ZOOKEEPER_CONNECT=zk1:22181,zk2:32181,zk3:42181 \
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka3:49092 \
