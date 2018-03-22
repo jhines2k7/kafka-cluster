@@ -14,7 +14,7 @@ landoop/kafka-topics-ui &
 docker service create \
 --name schemaregistryui \
 --network kafkanet \
--p 8000:8000 \
+-p 8100:8000 \
 -e "SCHEMAREGISTRY_URL=http://schemaregistry:8081" \
 --constraint "engine.labels.node.type==landoop" \
 landoop/schema-registry-ui &
