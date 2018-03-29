@@ -12,9 +12,8 @@ docker service create \
 --name kafkatopicsui \
 --network kafkanet \
 -p 8000:8000 \
--e KAFKA_REST_PROXY_URL="http://kafkarest:8082" \
--e PROXY=true \
---constraint="engine.labels.node.type==landoop" \
+-e "KAFKA_REST_PROXY_URL=http://kafkarest:8082" \
+--constraint="engine.labels.node.type==confluent" \
 landoop/kafka-topics-ui &
 
 docker service create \
@@ -22,7 +21,7 @@ docker service create \
 --network kafkanet \
 -p 8100:8000 \
 -e SCHEMAREGISTRY_URL="http://schemaregistry:8081" \
---constraint="engine.labels.node.type==landoop" \
+--constraint="engine.labels.node.type==confluent" \
 landoop/schema-registry-ui &
 
 wait

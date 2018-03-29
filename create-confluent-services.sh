@@ -11,6 +11,7 @@ eval "$(docker-machine env $node_name)"
 docker service create \
 --name schemaregistry \
 --network kafkanet \
+-p 8081:8081
 -e SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL="zk1:22181,zk2:32181,zk3:42181" \
 -e SCHEMA_REGISTRY_HOST_NAME="schemaregistry" \
 -e SCHEMA_REGISTRY_LISTENERS="http://0.0.0.0:8081" \
@@ -30,7 +31,6 @@ confluentinc/cp-kafka-rest:4.0.0 &
 docker-machine ssh confluent mkdir -p /tmp/control-center/data
 
 docker service create \
---name controlcenter \
 --network kafkanet \
 -p 9021:9021 \
 --mount type=bind,source=/tmp/control-center/data,destination=/var/lib/confluent-control-center \

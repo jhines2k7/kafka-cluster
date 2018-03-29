@@ -1,11 +1,21 @@
-docker run -d \
+docker service create \
 --name kafkatopicsui \
 --network kafkanet \
 -p 8000:8000 \
--e="KAFKA_REST_PROXY_URL http://kafkarest:8082" \
--e PROXY=true \
---constraint="engine.labels.node.type==landoop" \
+-e "KAFKA_REST_PROXY_URL=http://kafkarest:8082" \
+-e "PROXY=true" \
+--constraint="engine.labels.node.type==confluent" \
 landoop/kafka-topics-ui
+
+docker service create \
+--name kafkarest \
+--network kafkanet \
+-e KAFKA_REST_ZOOKEEPER_CONNECT="zk1:22181,zk2:32181,zk3:42181" \
+-e KAFKA_REST_LISTENERS="http://0.0.0.0:8082" \
+-e KAFKA_REST_SCHEMA_REGISTRY_URL="http://schemaregistry:8081" \
+-e KAFKA_REST_HOST_NAME="kafkarest" \
+--constraint="engine.labels.node.type==confluent" \
+confluentinc/cp-kafka-rest:4.0.0
 
 docker run \
 --net=kafkanet \

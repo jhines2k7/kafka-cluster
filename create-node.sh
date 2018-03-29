@@ -8,10 +8,6 @@ if [ "$PROVIDER" == "aws" ] ; then
     ami="ami-4f80b52a"
     # ami="ami-6a5f6a0f"
 
-    if [ "$node_type" == "confluent" ] || [ "$node_type" == "landoop" ] ; then
-        instance_type=t2.small
-    fi
-
     docker-machine create \
     --engine-label "node.type=$node_type" \
     --driver amazonec2 \
@@ -25,11 +21,7 @@ if [ "$PROVIDER" == "aws" ] ; then
     $node_name
 else
     size=4gb
-
-    if [ "$node_type" == "confluent" ] || [ "$node_type" == "landoop" ] ; then
-        size=2gb
-    fi
-
+    
     docker-machine create \
     --engine-label "node.type=$node_type" \
     --driver digitalocean \

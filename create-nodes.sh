@@ -92,8 +92,6 @@ fi
 
 create_node_and_join_swarm confluent &
 
-create_node_and_join_swarm landoop &
-
 wait
 
 echo "======> Finished creating cluster nodes."
