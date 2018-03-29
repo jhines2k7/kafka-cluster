@@ -27,6 +27,8 @@ docker service create \
 --constraint="engine.labels.node.type==confluent" \
 confluentinc/cp-kafka-rest:4.0.0 &
 
+docker-machine ssh confluent mkdir -p /tmp/control-center/data
+
 docker service create \
 --name controlcenter \
 --network kafkanet \
