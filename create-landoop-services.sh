@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-eval "$(docker-machine env landoop)"
+node_name=zk-node-1
+
+if [ "$ENV" == "dev" ] ; then
+    node_name=kafka-node-1
+fi
+
+eval "$(docker-machine env $node_name)"
 
 docker service create \
 --name kafkatopicsui \
