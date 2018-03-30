@@ -52,7 +52,6 @@ docker service create \
 -e CONNECT_LOG4J_ROOT_LOGLEVEL=DEBUG \
 -e CONNECT_LOG4J_LOGGERS=org.reflections=ERROR \
 -e CONNECT_PLUGIN_PATH=/usr/share/java \
---mount type=bind,source=/tmp/quickstart/file,destination=/tmp/quickstart \
 --constraint "engine.labels.node.type==confluent" \
 confluentinc/cp-kafka-connect:4.0.0 &
 
