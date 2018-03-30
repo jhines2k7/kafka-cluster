@@ -36,8 +36,8 @@ docker service create \
 -e CONNECT_PRODUCER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor \
 -e CONNECT_CONSUMER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor \
 -e CONNECT_BOOTSTRAP_SERVERS=kafka1:29092,kafka2:39092,kafka3:49092 \
--e CONNECT_REST_HOST_NAME="kafkaconnect" \
--e CONNECT_REST_PORT=8083 \
+-e CONNECT_REST_PORT=8082 \
+-e CONNECT_REST_ADVERTISED_HOST_NAME="kafkaconnect" \
 -e CONNECT_GROUP_ID="kafkaconnect" \
 -e CONNECT_CONFIG_STORAGE_TOPIC="connect-config" \
 -e CONNECT_OFFSET_STORAGE_TOPIC="connect-offsets" \
@@ -49,7 +49,6 @@ docker service create \
 -e CONNECT_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
 -e CONNECT_INTERNAL_KEY_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
 -e CONNECT_INTERNAL_VALUE_CONVERTER="org.apache.kafka.connect.json.JsonConverter" \
--e CONNECT_REST_ADVERTISED_HOST_NAME="kafkaconnect" \
 -e CONNECT_LOG4J_ROOT_LOGLEVEL=DEBUG \
 -e CONNECT_LOG4J_LOGGERS=org.reflections=ERROR \
 -e CONNECT_PLUGIN_PATH=/usr/share/java \

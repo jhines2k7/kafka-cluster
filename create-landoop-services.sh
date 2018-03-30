@@ -26,4 +26,13 @@ docker service create \
 --constraint="engine.labels.node.type==confluent" \
 landoop/schema-registry-ui &
 
+docker service create \
+--name kafkaconnectui \
+--network kafkanet \
+-p 8200:8000 \
+-e "CONNECT_URL=http://kafkaconnect:8083" \
+-e "PROXY=true" \
+--constraint="engine.labels.node.type==confluent" \
+landoop/kafka-connect-ui &
+
 wait
