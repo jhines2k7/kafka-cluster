@@ -1,12 +1,3 @@
-docker service create \
---name kafkatopicsui \
---network kafkanet \
--p 8000:8000 \
--e "KAFKA_REST_PROXY_URL=http://kafkarest:8082" \
--e "PROXY=true" \
---constraint="engine.labels.node.type==confluent" \
-landoop/kafka-topics-ui
-
 docker run \
 --net=kafkanet \
 --rm \
@@ -30,7 +21,7 @@ docker run \
 confluentinc/cp-kafka:4.0.0 \
 kafka-console-consumer --bootstrap-server kafka1:29092 --topic topic1 --new-consumer --from-beginning --max-messages 42
 
-docker run -it --net=kafka-net --rm confluentinc/cp-schema-registry:4.0.0 bash
+docker run -it --net=kafkanet --rm confluentinc/cp-schema-registry:4.0.0 bash
 
 /usr/bin/kafka-avro-console-producer --broker-list kafka1:29092,kafka2:39092,kafka3:39092 --topic schemademo --property schema.registry.url=http://schemaregistry:8081 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
@@ -53,19 +44,19 @@ docker run \
 --net=kafkanet \
 --rm \
 confluentinc/cp-kafka:4.0.0 \
-kafka-topics --create --topic quickstart-config --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+kafka-topics --create --topic connect-config --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
 
 docker run \
 --net=kafkanet \
 --rm \
 confluentinc/cp-kafka:4.0.0 \
-kafka-topics --create --topic quickstart-offsets --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+kafka-topics --create --topic connect-offsets --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
 
 docker run \
 --net=kafkanet \
 --rm \
 confluentinc/cp-kafka:4.0.0 \
-kafka-topics --create --topic quickstart-data --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
+kafka-topics --create --topic connect-data --partitions 3 --replication-factor 3 --if-not-exists --zookeeper zk1:22181,zk2:32181,zk3:42181
 
 docker run \
 --net=kafkanet \
@@ -103,12 +94,12 @@ docker service create \
 -e CONNECT_PRODUCER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor \
 -e CONNECT_CONSUMER_INTERCEPTOR_CLASSES=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor \
 -e CONNECT_BOOTSTRAP_SERVERS=kafka1:29092,kafka2:39092,kafka3:49092 \
--e CONNECT_REST_HOST_NAME="localhost" \
--e CONNECT_REST_PORT=28082 \
--e CONNECT_GROUP_ID="quickstart" \
--e CONNECT_CONFIG_STORAGE_TOPIC="quickstart-config" \
--e CONNECT_OFFSET_STORAGE_TOPIC="quickstart-offsets" \
--e CONNECT_STATUS_STORAGE_TOPIC="quickstart-status" \
+-e CONNECT_REST_HOST_NAME="kafkaconnect" \
+-e CONNECT_REST_PORT=8083 \
+-e CONNECT_GROUP_ID="kafkaconnect" \
+-e CONNECT_CONFIG_STORAGE_TOPIC="connect-config" \
+-e CONNECT_OFFSET_STORAGE_TOPIC="connect-offsets" \
+-e CONNECT_STATUS_STORAGE_TOPIC="connect-status" \
 -e CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=3 \
 -e CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=3 \
 -e CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=3 \
@@ -121,16 +112,18 @@ docker service create \
 -e CONNECT_LOG4J_LOGGERS=org.reflections=ERROR \
 -e CONNECT_PLUGIN_PATH=/usr/share/java \
 --mount type=bind,source=/tmp/quickstart/file,destination=/tmp/quickstart \
---constraint "engine.labels.node.type==confluence-platform" \
+--constraint "engine.labels.node.type==confluent" \
 confluentinc/cp-kafka-connect:4.0.0
 
+docker machine ssh kafkaconnect mkdir -p /tmp/quickstart/file
 
 docker service create \
 --name kafkaconnectui \
 --network kafkanet \
--p 8000:8000 \
--e "CONNECT_URL=http://kafkaconnect" \
---constraint "engine.labels.node.type==landoop" \
+-p 8200:8000 \
+-e "CONNECT_URL=http://kafkaconnect:8083" \
+-e "PROXY=true" \
+--constraint="engine.labels.node.type==confluent" \
 landoop/kafka-connect-ui
 
 --mount type=bind,source=/tmp/control-center/data,destination=/var/lib/confluent-control-center \
